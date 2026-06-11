@@ -1,0 +1,65 @@
+# Asteria-Malf-Pas 默认参数（唯一配置文件）
+# 分区对应各层。可调参数最终由 tuning 网格扫描覆盖。
+
+[malf.pivot]
+# 分形确认：极值点前后各 k 根 bar 都不更极端则确认。确认有 k 根延迟。
+pivot_k = 2
+pivot_detection_rule_version = "fractal-k2-v1"
+# 价格归一化精度（round 到几位小数后再做严格比较，O3）。
+price_round_decimals = 2
+
+[malf.core]
+core_rule_version = "malf-core-v1.4-mvp"
+
+[malf.lifespan]
+lifespan_rule_version = "malf-lifespan-v1.4-mvp"
+sample_version = "peer-empirical-v1"
+# life_state 分位阈值（文档未给数值，MVP 起步值）。
+high_stagnation_threshold = 0.8
+high_update_threshold = 0.8
+low_update_threshold = 0.2
+
+[malf.behavior]
+malf_v1_5_rule_version = "malf-behavior-v1.5-mvp"
+# 行为 regime 分界阈值（文档未给数值，MVP 起步值）。
+advancing_max_no_new_span = 2   # no_new_span <= 此值且 new_count>=1 → advancing
+slowing_max_no_new_span = 5     # 之间 → slowing
+stalled_min_no_new_span = 10    # >= 此值 → stalled
+fresh_max_no_new_span = 2       # stagnation: fresh
+watchful_max_no_new_span = 5    # watchful
+
+[pas.core]
+pas_core_rule_version = "pas-core-v1.5-mvp"
+# 以下为文档写死硬阈值，仅作记录，代码中照搬不可改。
+proving_no_new_span_lt = 5      # IA-3
+neutral_terminal_no_new_span_ge = 20  # IA-4 subtype 1
+neutral_stagnant_no_new_span_ge = 10  # IA-4 subtype 2
+
+[pas.lifespan]
+pas_lifespan_rule_version = "pas-lifespan-v1.5-mvp"
+
+[signal]
+signal_rule_version = "signal-v1.0-mvp"
+# 接受哪些 posture（favored / favored+allowed）。
+accept_postures = ["favored", "allowed"]
+# 接受哪些 setup family。
+accept_families = ["TST", "BOF", "BPB", "PB", "CPB"]
+min_reward_risk = 1.0
+
+[backtest]
+initial_capital = 1000000.0
+stop_offset = 0.02              # 初始止损 = T0.low - stop_offset
+target_r = 1.0                  # target1 = entry + target_r * 1R
+scale_out_pct = 0.5             # 达 target1 减仓比例
+time_stop_bars = 8              # 时间止损：N 根 bar 内趋势不再则退出
+trail_method = "prev_hl"        # chandelier / prev_hl / atr
+trail_k = 3.0                   # chandelier/atr 的 ATR 倍数
+atr_period = 14
+# A股约束
+default_price_limit_pct = 0.10  # MVP 统一近似；board 精确化后置
+position_pct_per_trade = 0.1    # 每笔占组合比例（粗略仓位）
+
+[universe]
+min_list_days = 250             # 上市 < 1 年剔除
+min_avg_amount = 10000000.0     # 低流动性剔除（日均成交额下限，元）
+exclude_st = true
