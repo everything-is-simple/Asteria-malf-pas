@@ -26,7 +26,7 @@ if str(_ROOT) not in sys.path:
 
 from asteria.data.contracts import DailyBar  # noqa: E402
 from asteria.malf.runner import assemble_from_bars  # noqa: E402
-from asteria.malf.types import SystemState  # noqa: E402
+from asteria.malf.types import LifeState, SystemState, WaveCoreState  # noqa: E402
 from asteria.storage.malf_writer import write_run  # noqa: E402
 
 _D0 = date(2020, 1, 1)
@@ -110,11 +110,21 @@ def test_assemble_from_bars_e2e_fields_and_invariants():
             if rank is not None:
                 assert 0.0 <= rank <= 1.0
 
-    # 至少一个活波 + 至少一个 terminal（P3 真实路径）
+    # 至少一个活波（否则数据太短，验收无判别力）
     assert any(
         p.system_state in (SystemState.UP_ALIVE, SystemState.DOWN_ALIVE)
         for p in run.positions
     )
+    # 至少一个 terminal（P3 真实路径：break bar 标记 terminated → life_state=terminal）
+    terminal = [
+        p for p in run.positions
+        if p.wave_core_state == WaveCoreState.TERMINATED
+        and p.life_state == LifeState.TERMINAL
+    ]
+    assert terminal, "未产出 terminal bar（P3 真实路径未覆盖）"
+    # P3：break bar 真实产出 terminal（wave_core_state=terminated → life_state=terminal）
+    assert any(p.wave_core_state == WaveCoreState.TERMINATED for p in run.positions)
+    assert any(p.life_state == LifeState.TERMINAL for p in run.positions)
 
 
 def test_writer_roundtrip(tmp_path):

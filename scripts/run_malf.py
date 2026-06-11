@@ -61,7 +61,7 @@ def main() -> None:
     print(f"  positions={len(run.positions)}  behaviors={len(run.behaviors)}  (应各 == bars)")
 
     # --- 验收自检 ---
-    _acceptance_checks(run)
+    ok = _acceptance_checks(run)
 
     # --- 末尾 N 个 bar 明细 ---
     tail = args.tail
@@ -89,9 +89,16 @@ def main() -> None:
         counts = write_run(run, k=args.k)
         print(f"\n已写入 malf_pas：{counts}")
 
+    # 验收失败 → 非零退出码（便于脚本化自动验收）。落库已先执行，不影响数据写入。
+    if not ok:
+        raise SystemExit(1)
 
-def _acceptance_checks(run) -> None:
-    """端到端验收自检：字段齐全 / transition=old_direction / rank ∈ [0,1]。"""
+
+def _acceptance_checks(run) -> bool:
+    """端到端验收自检：字段齐全 / transition=old_direction / rank ∈ [0,1]。
+
+    返回 True 表示全部通过；False 表示有问题（供 CLI 设非零退出码，便于自动验收）。
+    """
     problems: list[str] = []
 
     # 1. 三组逐 bar 一一对应
@@ -126,12 +133,13 @@ def _acceptance_checks(run) -> None:
         print("\n[验收 ✗] 发现问题：")
         for p in problems:
             print(f"  - {p}")
-    else:
-        n_terminal = sum(1 for p in run.positions if _fmt(p.life_state) == "terminal")
-        print(
-            f"\n[验收 ✓] 字段齐全 · transition 保留 old_direction · rank∈[0,1] · "
-            f"terminal bar 数={n_terminal}"
-        )
+        return False
+    n_terminal = sum(1 for p in run.positions if _fmt(p.life_state) == "terminal")
+    print(
+        f"\n[验收 ✓] 字段齐全 · transition 保留 old_direction · rank∈[0,1] · "
+        f"terminal bar 数={n_terminal}"
+    )
+    return True
 
 
 if __name__ == "__main__":
