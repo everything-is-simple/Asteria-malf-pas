@@ -198,58 +198,48 @@ CREATE TABLE IF NOT EXISTS wave_behavior_snapshot (
 CREATE INDEX IF NOT EXISTS idx_behavior_sym_dt ON wave_behavior_snapshot(symbol, timeframe, bar_dt);
 
 CREATE TABLE IF NOT EXISTS pas_core_snapshot (
-    core_snapshot_id    INTEGER PRIMARY KEY AUTOINCREMENT,
+    pas_core_snapshot_id INTEGER PRIMARY KEY AUTOINCREMENT,
     symbol              TEXT NOT NULL,
     timeframe           TEXT NOT NULL,
     bar_dt              TEXT NOT NULL,
-    malf_wave_position_id     INTEGER,
-    wave_behavior_snapshot_id INTEGER,
+    wave_id             INTEGER,
+    direction           TEXT,
+    system_state        TEXT,
     directional_premise TEXT,
     read_status         TEXT,
-    strength_evidence   TEXT,
-    weakness_evidence   TEXT,
-    ambiguity_evidence  TEXT,
     tst_posture         TEXT,
     bof_posture         TEXT,
     bpb_posture         TEXT,
     pb_posture          TEXT,
     cpb_posture         TEXT,
-    judgment_reason         TEXT,
-    posture_derivation_reason TEXT,
-    premise_mapping_branch  TEXT,
-    posture_theorem_branch  TEXT,
-    pas_core_rule_version   TEXT,
+    transition_bound    INTEGER NOT NULL DEFAULT 0,
+    lineage_gap         INTEGER NOT NULL DEFAULT 0,
+    ambiguity_dominates INTEGER NOT NULL DEFAULT 0,
+    strength_evidence_count INTEGER NOT NULL DEFAULT 0,
+    weakness_evidence_count INTEGER NOT NULL DEFAULT 0,
+    ambiguity_evidence_count INTEGER NOT NULL DEFAULT 0,
+    reason_codes        TEXT,
+    lineage_hash        TEXT,
+    pas_core_rule_version TEXT,
     source_run_id       TEXT,
     UNIQUE(symbol, timeframe, bar_dt, source_run_id)
 );
 CREATE INDEX IF NOT EXISTS idx_pas_core_sym_dt ON pas_core_snapshot(symbol, timeframe, bar_dt);
 
 CREATE TABLE IF NOT EXISTS pas_lifespan_record (
-    lifespan_id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    pas_lifespan_record_id INTEGER PRIMARY KEY AUTOINCREMENT,
     symbol              TEXT NOT NULL,
     timeframe           TEXT NOT NULL,
     bar_dt              TEXT NOT NULL,
-    core_snapshot_id    INTEGER,
-    setup_family        TEXT NOT NULL,
+    lifespan_id         TEXT NOT NULL,
     lifespan_state      TEXT NOT NULL,
-    state_reason        TEXT,
-    pas_core_rule_version TEXT,
-    malf_wave_position_id     INTEGER,
-    wave_behavior_snapshot_id INTEGER,
-    lifespan_rule_version TEXT,
+    transition_reason   TEXT,
+    wave_id             INTEGER,
+    pas_snapshot_bar_dt TEXT,
     source_run_id       TEXT
 );
-
-CREATE TABLE IF NOT EXISTS pas_lifespan_transition (
-    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
-    lifespan_id         INTEGER NOT NULL,
-    from_state          TEXT,
-    to_state            TEXT,
-    trigger             TEXT,
-    trigger_reason      TEXT,
-    bar_dt              TEXT,
-    core_snapshot_id_at_transition INTEGER
-);
+CREATE INDEX IF NOT EXISTS idx_pas_lifespan_sym_dt ON pas_lifespan_record(symbol, timeframe, bar_dt);
+CREATE INDEX IF NOT EXISTS idx_pas_lifespan_id ON pas_lifespan_record(lifespan_id);
 
 -- ========================================================================
 -- @db: backtest   回测库 backtest.sqlite
