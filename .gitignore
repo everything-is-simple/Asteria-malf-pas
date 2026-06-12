@@ -29,3 +29,6 @@ data/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Claude Code 本地产物（plan / 工具缓存，不入库）
+.claude/
