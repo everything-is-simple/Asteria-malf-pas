@@ -3,7 +3,7 @@
 不依赖真实行情库：用合成 OHLC 序列走 Core→Lifespan→behavior，
 再用临时 sqlite（从 schema.sql 抽 malf_pas 段建表）验证 writer 写入 + 读回一致。
 
-验收点（docs/TEST_ACCEPTANCE.md §2 M2 端到端）：
+验收点（docs/03-task-breakdown/TEST_ACCEPTANCE.md §2 M2 端到端）：
 - positions / behaviors 逐 bar 与 bars 一一对应。
 - transition bar 的 direction = old_direction（非 None）。
 - rank ∈ [0,1]。

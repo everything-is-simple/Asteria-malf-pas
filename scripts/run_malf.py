@@ -4,7 +4,7 @@
   python scripts/run_malf.py --symbol 600000.SH            # 只算 + 打印验收摘要（不写库）
   python scripts/run_malf.py --symbol 600000.SH --write    # 同时落库到 malf_pas
 
-验收口径（docs/TEST_ACCEPTANCE.md §2 M2 端到端）：
+验收口径（docs/03-task-breakdown/TEST_ACCEPTANCE.md §2 M2 端到端）：
   字段齐全；transition bar 的 direction=old_direction；rank ∈ [0,1]。
 """
 

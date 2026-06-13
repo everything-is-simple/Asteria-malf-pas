@@ -1,7 +1,7 @@
 # Asteria-Malf-Pas MVP 实现设计 (v1.5)
 
 > 经批准的重构计划，项目目录唯一参照。同步副本：`C:\Users\Administrator\.claude\plans\g-asteria-malf-pas-block-jaunty-nebula.md`（plan mode 临时产物）。
-> 配套权威：MALF 见 `docs/MALF_DESIGN.md`；里程碑小结见 `docs/M*_SUMMARY.md`。
+> 配套权威：MALF 见 `docs/02-module-design/MALF_DESIGN.md`；里程碑小结见 `docs/04-implementation-records/M*_SUMMARY.md`。
 
 ## Context（为什么做这次重构）
 
@@ -144,7 +144,7 @@ flowchart LR
 
 ## 3. MALF v1.5 实现设计
 
-> 完整权威规范见 **`docs/MALF_DESIGN.md`**（图表化）。此处仅列实现要点与本计划的取舍锚点。
+> 完整权威规范见 **`docs/02-module-design/MALF_DESIGN.md`**（图表化）。此处仅列实现要点与本计划的取舍锚点。
 
 ### 3.1 pivot 检测（malf/pivot.py）
 
@@ -181,7 +181,7 @@ flowchart TD
 
 ### 3.3 Lifespan / 3.4 Behavior
 
-详见 `docs/MALF_DESIGN.md` §3、§4。要点：rank 用预计算样本（MVP 简化，`sample_cutoff ≤ 当前 bar` 防前视）；6 regime 纯派生 + 比较铁律（transition 优先、无 guard 不出 guard_pressure）。
+详见 `docs/02-module-design/MALF_DESIGN.md` §3、§4。要点：rank 用预计算样本（MVP 简化，`sample_cutoff ≤ 当前 bar` 防前视）；6 regime 纯派生 + 比较铁律（transition 优先、无 guard 不出 guard_pressure）。
 
 ---
 
@@ -282,17 +282,21 @@ stateDiagram-v2
 ```mermaid
 flowchart TD
     T0["T0 收盘扫描<br/>Signal accept → 挂单意图"] --> T1
-    T1["T1 开盘集合竞价进场<br/>初始止损 stop = T0.low − 0.02<br/>1R = entry − stop；target1 = entry + 1R"]
+    T1["T1 开盘集合竞价进场<br/>stop = T0.low − stop_offset（floor min_risk_pct）<br/>1R = entry − stop；结构 T1/T2"]
     T1 --> CHK{T1 收盘 < stop?}
     CHK -->|是| EXIT2["T2 开盘清仓（买入日破止损）"]
     CHK -->|否| HOLD[持仓管理]
     HOLD --> TGT{达 target1?}
-    TGT -->|是| HALF["减仓 50%<br/>余仓启用移动止损<br/>（最终移动止损必须 > target1）"]
-    HOLD --> TIME{time_stop_bars 内<br/>价格不动/趋势消失?}
+    TGT -->|是| HALF["减仓 50% + 拉保本<br/>余仓按 guard 结构跟踪<br/>（地板=入场价，可低于 target1）"]
+    HOLD --> TIME{time_stop_bars 内<br/>无新高?}
     TIME -->|是| EXITT[时间止损退出]
+    HALF --> T2Q{达 target2?}
+    T2Q -->|是| EXIT2T[清剩余]
     HALF --> TRAIL{触及移动止损?}
     TRAIL -->|是| EXITR[清仓]
 ```
+
+> 交易规则的权威版本（含质量门、结构 T1/T2、保本跟踪、大盘过滤）见 `02-module-design/BACKTEST_DESIGN.md` §2-§3；本节为里程碑计划视角的概览。
 
 > **A 股约束**：T+1（买入次日才能卖）；涨停无法买入、跌停无法卖出；集合竞价撮合。
 
@@ -380,6 +384,8 @@ erDiagram
 
 ## 7. 调参 / 分组回测设计
 
+> **现状**：跨时间组验证已实现（`scripts/validate_method.py` 跑 initial/validation + `analyze_run.py` 分布分析）；**参数网格全自动扫描（`tuning/grid.py`）+ holdout 运行计数锁尚未实装**（M5）。当前 holdout 纪律靠 validate_method/analyze_run 对 `group_name='holdout'` 显式 `SystemExit` 拦截 + 人工不碰。
+
 ### 7.1 时间分组（硬隔离）
 
 ```mermaid
@@ -415,6 +421,8 @@ flowchart LR
 
 ## 8. Streamlit UI 设计（最小可用，只读连接）
 
+> **现状**：Page 3（Structure Inspector）**已实现**（`src/asteria/ui/pages/symbol_view.py`，M1）；**Page 1 机会列表 / Page 2 回测并排对比尚未实现**（M5）。当前回测分布分析靠 CLI `scripts/analyze_run.py`（文本表格）代偿。
+
 | 页 | 内容 |
 |---|---|
 | **Page 1 机会列表** | 选日期 → 查 signal_candidate；表格 symbol/family/premise/read_status/5族posture/entry/stop/target1/RR/decision；按 RR 排序、按 family 过滤 |
@@ -427,19 +435,22 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    M1["M1 ✅<br/>数据→MALF Core→可视化"] --> M2["M2 ⏳<br/>Lifespan + 6 regime"]
-    M2 --> M3["M3<br/>PAS v1.5"]
-    M3 --> M4["M4<br/>Signal + 回测引擎"]
-    M4 --> M5["M5<br/>调参 + 分组回测 + 完整 UI"]
+    M1["M1 ✅<br/>数据→MALF Core→可视化"] --> M2["M2 ✅<br/>Lifespan + 6 regime"]
+    M2 --> M3["M3 ✅<br/>PAS v1.5"]
+    M3 --> M4["M4 ✅<br/>Signal + 回测引擎<br/>+ 方法精炼 + 验证"]
+    M4 --> M5["M5 ⏳<br/>调参网格 + holdout锁 + UI Page1/2"]
 ```
 
 | 里程碑 | 交付 | 验证 |
 |---|---|---|
 | **M1** ✅ | TDX 解析+ingest；pivot+Core 状态机；Structure Inspector | 600000 肉眼正确，event ordering 可重放 |
-| **M2** ⏳ | 计数/rank/life_state/quadrant/birth + 6 regime | 字段齐全，transition 保留 old_direction，rank 单调性 |
-| **M3** | 三态树 → premise → read → posture matrix + 四态机 | posture matrix 全枚举确定性，C6 上限 + PM-T6 降档 |
-| **M4** | accept/reject + 事件循环（T+1/止损/减半/移动/时间/涨跌停） | 单标的手算 1-2 笔对账，无未来函数 |
-| **M5** | 参数网格 + 三组工作流 + holdout 锁 + Page1/Page2 | initial→validation→holdout 全流程跑通 |
+| **M2** ✅ | 计数/rank/life_state/quadrant/birth + 6 regime | 字段齐全，transition 保留 old_direction，rank 单调性 |
+| **M3** ✅ | 三态树 → premise → read → posture matrix + 四态机 | posture matrix 全枚举确定性，C6 上限 + PM-T6 降档 |
+| **M4** ✅ | Signal accept/reject + 事件循环（T+1/止损/减半/移动/时间/涨跌停）；**实际超出原定义**：吸收四书做质量门「2+N」进场 + 结构 T1/T2 分批 + 保本跟踪 + 大盘过滤；验证基础设施（validate_method/analyze_run）+ 5496 标的灌数 | 单标的手算对账、无未来函数；185 测试；200 只跨组验证 |
+| **M5** ⏳ | 参数网格 + 三组工作流 + holdout 锁 + UI Page1/2 | initial→validation→holdout 全流程跑通 |
+
+> **M4 实际工作量远超原计划定义**：原 M4 仅「Signal+回测引擎」，实际还做了交易方法精炼（吸收 LanceBeggs/许佳冲/Volman/达瓦斯）、跨时间组验证框架、全量灌数与第1套方法实证诊断。记录见 `04-implementation-records/{M4_SUMMARY, TRADING_METHOD_REFINEMENT, VALIDATION_FINDINGS}.md`。
+> **第1套方法尚未定稿**：200 只跨组验证显示未达稳健（initial pf=0.94/validation pf=1.00），诊断出止损过紧 + 大盘过滤滞后两问题，正在迭代——这正体现「文档完整 ≠ 系统完成」。
 
 ---
 
@@ -462,7 +473,7 @@ MALF Core 全状态机；MALF v1.5 六 regime；PAS Core 三态树 + posture mat
 | EvidenceTriplet 详细证据 | 命中 regime 名列表 | ✅ 三数组 |
 | *Latest 物化表 | SQL MAX(bar_dt) | 后续可加 |
 | 多 timeframe(week/month) | 只做 day | ✅ timeframe |
-| index/block 资产 | 只做 stock | ✅ asset_type |
+| block 资产 | 只做 stock + index（指数供大盘过滤） | ✅ asset_type |
 
 ### 明确不做
 

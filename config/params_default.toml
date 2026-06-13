@@ -44,11 +44,34 @@ signal_rule_version = "signal-v1.0-mvp"
 accept_postures = ["favored", "allowed"]
 # 接受哪些 setup family。
 accept_families = ["TST", "BOF", "BPB", "PB", "CPB"]
-min_reward_risk = 1.0
+# --- PAS 质量门（D4「2+N 评级」，吸收许佳冲信号分级）---
+# 基本条件：read_status（信号强度）须 ∈ 此集。
+accept_read_status = ["strong", "mixed"]
+# 评分用的「可操作 premise」集（在关键位/有方向假设）。
+actionable_premises = [
+    "expect_strength_continuation",
+    "expect_boundary_test",
+    "expect_transition_resolution",
+]
+# 质量评分门槛（满分 5：favored/strong/premise可操作/证据偏强/无C6旗标）。
+min_quality_score = 2
+# 是否硬否决「歧义主导」（默认关，posture 已反映 C6）。
+veto_ambiguity_dominates = false
+# life_state 上限：排除衰竭/末端（terminal/stagnant），挡掉顶部 climax。
+# 留空 [] → 不卡 life_state（None）。
+accept_life_states = ["early", "developing", "extended"]
+# --- 风报比（D3：RR 对结构前高算，惰性路径已消除）---
+min_reward_risk = 1.5
 
 [backtest]
 initial_capital = 1000000.0
 stop_offset = 0.02              # 初始止损 = T0.low - stop_offset
+# 最小风险距离（占 entry 比例）：修复 RR 虚高。T0 收盘贴近最低时 raw 1R 趋近
+# stop_offset，RR 被极小分母架空；floor 到 min_risk_pct×entry 让 stop/1R/RR/仓位
+# 用同一诚实风险值。signal/rules 共用此值。0 = 不启用。
+# 注：实验过 0.045，整体更差（pf 0.87/0.88、交易数腰斩、亏损转移到 stop）——
+# 左尾非止损宽窄问题，回退 0.02。根因疑在熊市过滤（见第3步）。
+min_risk_pct = 0.02
 target_r = 1.0                  # target1 = entry + target_r * 1R
 scale_out_pct = 0.5             # 达 target1 减仓比例
 time_stop_bars = 8              # 时间止损：N 根 bar 内趋势不再则退出
@@ -58,6 +81,11 @@ atr_period = 14
 # A股约束
 default_price_limit_pct = 0.10  # MVP 统一近似；board 精确化后置
 position_pct_per_trade = 0.1    # 每笔占组合比例（粗略仓位）
+# 大盘趋势过滤（决策 B/C/D）：启用时大盘 ∈ bear_states 停开新多单，已持仓不强平。
+# 大盘趋势 = 沪深300(000300.SH) 跑 MALF 的 system_state，与个股同口径。
+market_filter_enabled = true
+market_index_symbol = "000300.SH"
+bear_states = ["down_alive"]    # 仅明确空头拦截，不误伤震荡（transition）
 
 [universe]
 min_list_days = 250             # 上市 < 1 年剔除

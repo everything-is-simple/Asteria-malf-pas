@@ -12,7 +12,7 @@
 
 数据流：`TDX txt → SQLite(market) → MALF → PAS → Signal → Backtest → SQLite(results) → Streamlit UI`
 
-完整设计见 [`docs/REBUILD_PLAN.md`](docs/REBUILD_PLAN.md)，里程碑进度见 `docs/M*_SUMMARY.md`。
+完整设计见 [`docs/03-task-breakdown/REBUILD_PLAN.md`](docs/03-task-breakdown/REBUILD_PLAN.md)，里程碑进度见 `docs/04-implementation-records/M*_SUMMARY.md`。
 
 ## 环境
 

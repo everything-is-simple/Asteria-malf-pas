@@ -10,9 +10,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 | 权威文档 | 内容 |
 |---|---|
-| `docs/REBUILD_PLAN.md` | 完整实现设计（分层/PAS/回测/调参/UI） |
-| `docs/MALF_DESIGN.md` | MALF 单一权威规范（v1.0→v1.5 整合，图表化） |
-| `docs/M*_SUMMARY.md` | 里程碑小结 |
+| `docs/03-task-breakdown/REBUILD_PLAN.md` | 完整实现设计（分层/PAS/回测/调参/UI） |
+| `docs/02-module-design/MALF_DESIGN.md` | MALF 单一权威规范（v1.0→v1.5 整合，图表化） |
+| `docs/04-implementation-records/M*_SUMMARY.md` | 里程碑小结 |
 
 > **文档约定**：能用图就用 Mermaid 图、能用表就用表，减少散文。
 

@@ -164,6 +164,7 @@ erDiagram
         TEXT first_dt
         TEXT last_dt
         TEXT list_status "active/unknown"
+        TEXT asset_type "stock/index（防指数进股票池）"
     }
     price_bar {
         TEXT symbol PK
@@ -274,7 +275,7 @@ flowchart TD
 | 类别 | 进仓库？ | 位置 |
 |---|---|---|
 | 源码 / schema.sql / 配置 | ✅ | 仓库内 |
-| 设计文档 | ✅ | `docs/` |
+| 设计文档 | ✅ | `docs/02-module-design/` |
 | `.sqlite` 数据库 | ❌ | `DATA_ROOT`（外置） |
 | TDX 源文本 | ❌ | `H:/tdx_offline_Data`（只读源） |
 | 回测报告 / 备份 | ❌ | `REPORT_ROOT` / `BACKUP_ROOT`（外置） |
@@ -287,9 +288,9 @@ flowchart TD
 | 项 | MVP 取舍 | 接口保留 |
 |---|---|---|
 | timeframe | 只做 day | `price_bar` 无 timeframe 列；上层快照表保留 timeframe 字段 |
-| asset_type | 只做 stock | `ingest_source_file.asset_type` 字段保留 |
+| asset_type | **stock + index 都灌**（指数供大盘趋势过滤）；`instrument.asset_type` 区分，`select_symbols` 默认只选 stock，防指数进股票池 | `ingest()` 对 `(stock, index)` 双维度灌；旧库用 `_migrate_instrument_asset_type` 幂等加列 |
 | 前复权 | 不灌 | `ADJ_FOLDER` 只映射 qfq_back/raw_none |
-| index/block | 不做 | 解析器支持但 ingest 不调用 |
+| block | 不做 | 解析器支持但 ingest 不调用 |
 | 数据质量检查 | 靠 `open_px is None` 跳无效行 + pytest 解析测试 | 不建独立质检注册表（不重蹈上一版治理） |
 
 ---

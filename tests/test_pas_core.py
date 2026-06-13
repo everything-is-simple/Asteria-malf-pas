@@ -369,7 +369,7 @@ def test_input_contract_validation():
 
 
 # =========================================================================
-# 测试 8：Posture Matrix 5×5 全枚举确定性（REBUILD_PLAN §12 验收口径）
+# 测试 8：Posture Matrix 5×5 全枚举确定性（docs/03-task-breakdown/REBUILD_PLAN.md §12 验收口径）
 # =========================================================================
 # 直接测纯查表函数 _posture_matrix：它独立于三态树可达性，必须对全部
 # 25 格 (DirectionalPremise × ReadStatus) 组合确定。很多组合在三态树

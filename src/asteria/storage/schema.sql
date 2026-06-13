@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS instrument (
     board        TEXT,               -- main / star / chinext / bse / unknown
     first_dt     TEXT,
     last_dt      TEXT,
-    list_status  TEXT                -- active / unknown
+    list_status  TEXT,               -- active / unknown
+    asset_type   TEXT DEFAULT 'stock'  -- stock / index（防指数被选进股票池）
 );
 
 CREATE TABLE IF NOT EXISTS price_bar (
@@ -311,6 +312,7 @@ CREATE TABLE IF NOT EXISTS signal_candidate (
     planned_entry   REAL,
     planned_stop    REAL,
     planned_target1 REAL,
+    planned_target2 REAL,
     reward_risk     REAL,
     decision        TEXT,               -- accept | reject
     reason          TEXT
