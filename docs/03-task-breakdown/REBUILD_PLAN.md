@@ -437,8 +437,9 @@ flowchart LR
 flowchart LR
     M1["M1 ✅<br/>数据→MALF Core→可视化"] --> M2["M2 ✅<br/>Lifespan + 6 regime"]
     M2 --> M3["M3 ✅<br/>PAS v1.5"]
-    M3 --> M4["M4 ✅<br/>Signal + 回测引擎<br/>+ 方法精炼 + 验证"]
-    M4 --> M5["M5 ⏳<br/>调参网格 + holdout锁 + UI Page1/2"]
+    M3 --> M4["M4 ✅<br/>引擎+裁决契约"]
+    M4 --> M501["M5-01 ⏳<br/>方法诊断<br/>(止损/大盘过滤)"]
+    M501 --> M5["M5 ⏳<br/>调参网格+holdout锁+UI"]
 ```
 
 | 里程碑 | 交付 | 验证 |
@@ -446,11 +447,12 @@ flowchart LR
 | **M1** ✅ | TDX 解析+ingest；pivot+Core 状态机；Structure Inspector | 600000 肉眼正确，event ordering 可重放 |
 | **M2** ✅ | 计数/rank/life_state/quadrant/birth + 6 regime | 字段齐全，transition 保留 old_direction，rank 单调性 |
 | **M3** ✅ | 三态树 → premise → read → posture matrix + 四态机 | posture matrix 全枚举确定性，C6 上限 + PM-T6 降档 |
-| **M4** ✅ | Signal accept/reject + 事件循环（T+1/止损/减半/移动/时间/涨跌停）；**实际超出原定义**：吸收四书做质量门「2+N」进场 + 结构 T1/T2 分批 + 保本跟踪 + 大盘过滤；验证基础设施（validate_method/analyze_run）+ 5496 标的灌数 | 单标的手算对账、无未来函数；185 测试；200 只跨组验证 |
+| **M4** ✅ | **引擎 + Signal 裁决契约**：accept/reject + 事件循环（T+1/止损/减半/保本跟踪/T2/时间/涨跌停）+ 验证基础设施 + 全量灌数 | 单标的手算对账、无未来函数；189 测试 |
+| **M5-01** ⏳ | **第1套方法诊断**（独立研究线）：止损宽度 min_risk_pct + 大盘过滤替代（MALF regime → MA60） | initial/validation 两组 pf/avg_R/回撤同向改善；🔒 holdout 禁止 |
 | **M5** ⏳ | 参数网格 + 三组工作流 + holdout 锁 + UI Page1/2 | initial→validation→holdout 全流程跑通 |
 
-> **M4 实际工作量远超原计划定义**：原 M4 仅「Signal+回测引擎」，实际还做了交易方法精炼（吸收 LanceBeggs/许佳冲/Volman/达瓦斯）、跨时间组验证框架、全量灌数与第1套方法实证诊断。记录见 `04-implementation-records/{M4_SUMMARY, TRADING_METHOD_REFINEMENT, VALIDATION_FINDINGS}.md`。
-> **第1套方法尚未定稿**：200 只跨组验证显示未达稳健（initial pf=0.94/validation pf=1.00），诊断出止损过紧 + 大盘过滤滞后两问题，正在迭代——这正体现「文档完整 ≠ 系统完成」。
+> **🔒 M4 的 ✅ 指「引擎契约完成」，非「策略盈利」。** 交易方法是研究产物、本就没有「完成」态——第1套已实证未达稳健（见 `04-implementation-records/VALIDATION_FINDINGS.md`），其诊断与迭代是 **M5-01 起的独立研究线**，不是 M4 验收门。这正体现「文档完整 ≠ 系统完成」。
+> **M5 工程（调参网格/UI）是放大器，排在方法骨架稳定之后**——骨架没稳就搭放大器，只会把「为什么亏」掩盖在工程量里。
 
 ---
 

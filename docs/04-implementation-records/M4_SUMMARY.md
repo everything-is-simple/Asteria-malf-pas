@@ -55,6 +55,16 @@ T0 发现 → T1 进场（集合竞价 open）→ 初始止损 `T0.low − stop_
 - **A 股约束**（`test_backtest_broker.py`/`test_backtest_rules.py`）：T+1、涨跌停、破线、时间止损。
 - **无未来函数**：进场 dt = 发现 dt 下一交易日；只读 ≤ bar_dt。
 
+## M4 边界声明（收尾）
+
+> **M4 交付的是「回测引擎 + Signal 裁决契约」，已完成并验证**——189 测试绿、手算对账过、无未来函数审计过。这部分是**工程交付**，完整且可用。
+>
+> **交易方法的盈利/稳健性不是 M4 的验收门。** 交易方法是研究产物，本就没有「完成」态——它要反复证伪、迭代、可能永远在调。第1套方法（质量门 + 结构 T1/T2 + 保本跟踪）目前已实证**未达稳健**（见 [VALIDATION_FINDINGS](VALIDATION_FINDINGS.md)），这是研究的中间状态，**不影响 M4 引擎契约的完成判定**。
+>
+> 因此 M4 **以「引擎契约完成」收场**；交易方法的诊断与迭代从 **M5-01** 起，作为独立的、持续的研究线推进。
+
 ## 下一步
 
-交易方法精炼（吸收四本经典）见 [TRADING_METHOD_REFINEMENT](TRADING_METHOD_REFINEMENT.md)；跨时间组验证实证见 [VALIDATION_FINDINGS](VALIDATION_FINDINGS.md)。调参网格 + holdout 锁 + UI Page1/2 是 M5。
+- **引擎契约（M4）**：已闭合，作为基线（commit 61b3f32）冻结。不为策略表现去动 Signal 契约测试（裁决顺序/质量门/RR/T1T2/life_state）。
+- **交易方法研究（M5-01 起）**：第1套方法诊断——止损宽度（min_risk_pct）+ 大盘过滤替代方案（MALF regime → MA60）。只跑 initial/validation，🔒 holdout 禁止。见 [TRADING_METHOD_REFINEMENT](TRADING_METHOD_REFINEMENT.md) + [VALIDATION_FINDINGS](VALIDATION_FINDINGS.md)。
+- **M5 工程**（调参网格 + holdout 锁 + UI Page1/2）：放大器，排在方法骨架稳定**之后**。
